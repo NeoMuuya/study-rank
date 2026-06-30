@@ -1,0 +1,411 @@
+:root {
+  color-scheme: light;
+  --ink: #202226;
+  --muted: #6a7079;
+  --line: #d9dee7;
+  --paper: #f6f7f9;
+  --panel: #ffffff;
+  --green: #16825d;
+  --green-dark: #0f6045;
+  --blue: #2368b5;
+  --coral: #d95c45;
+  --gold: #c9961a;
+  --shadow: 0 16px 40px rgba(32, 34, 38, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.top-bar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 0 28px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--green);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 1.1rem;
+}
+
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
+  gap: 10px;
+  min-width: min(100%, 390px);
+}
+
+.stats-strip div {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.stats-strip span {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 850;
+}
+
+.stats-strip small,
+.panel-heading span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.entry-panel,
+.ranking-panel,
+.history-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.entry-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-row {
+  display: grid;
+  gap: 7px;
+}
+
+label {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  padding: 10px 12px;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(22, 130, 93, 0.12);
+  outline: none;
+}
+
+.primary-action,
+.ghost-action {
+  min-height: 44px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.primary-action {
+  background: var(--green);
+  color: #fff;
+}
+
+.primary-action:hover {
+  background: var(--green-dark);
+}
+
+.ghost-action {
+  background: #eef3f1;
+  color: var(--green-dark);
+  padding: 0 14px;
+}
+
+.ranking-panel {
+  min-height: 368px;
+  padding: 18px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ranking-list,
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ranking-list {
+  display: grid;
+  gap: 10px;
+}
+
+.rank-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 74px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.rank-number {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eef3f1;
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
+.rank-card:first-child .rank-number {
+  background: #fff1bd;
+  color: #7b5700;
+}
+
+.student-name {
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+  font-weight: 850;
+}
+
+.student-meta {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.score-box {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.score-box strong {
+  display: block;
+  color: var(--blue);
+  font-size: 1.25rem;
+}
+
+.score-box span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.edit-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--green-dark);
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.edit-action:hover {
+  background: #eef3f1;
+}
+
+.empty-state {
+  margin: 56px auto 0;
+  max-width: 320px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.history-panel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.history-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.history-list strong {
+  color: var(--ink);
+}
+
+.subject-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  background: rgba(217, 92, 69, 0.12);
+  color: #98402e;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(32, 34, 38, 0.42);
+  padding: 18px;
+  z-index: 20;
+}
+
+.admin-modal {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 420px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 24px 70px rgba(32, 34, 38, 0.2);
+  padding: 20px;
+}
+
+.admin-modal h2 {
+  margin-bottom: 8px;
+}
+
+.admin-modal p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-error {
+  min-height: 22px;
+  color: #b03724 !important;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+}
+
+@media (max-width: 800px) {
+  .app-shell {
+    width: min(100% - 22px, 640px);
+    padding: 20px 0;
+  }
+
+  .top-bar,
+  .workspace {
+    display: grid;
+  }
+
+  .stats-strip {
+    grid-template-columns: repeat(3, 1fr);
+    min-width: 0;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .stats-strip,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-card {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .score-box {
+    grid-column: 2;
+    text-align: left;
+  }
+}
