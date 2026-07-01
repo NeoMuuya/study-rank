@@ -15,7 +15,7 @@ npm start
 公開するときは、環境変数 `ADMIN_CODE` に自分だけが知っているコードを設定してください。
 
 ```bash
-ADMIN_CODE=your-secret-code npm start
+ADMIN_CODE=yanace
 ```
 
 ## データベース保存
