@@ -2,10 +2,17 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Pool } = require("pg");
 
 const port = Number(process.env.PORT || 3000);
 const adminCode = process.env.ADMIN_CODE || "admin";
 const dataFile = path.join(__dirname, "records.json");
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes("localhost") ? false : { rejectUnauthorized: false },
+    })
+  : null;
 const publicFiles = new Map([
   ["/", { file: "index.html", type: "text/html; charset=utf-8" }],
   ["/index.html", { file: "index.html", type: "text/html; charset=utf-8" }],
@@ -13,7 +20,40 @@ const publicFiles = new Map([
   ["/app.js", { file: "app.js", type: "application/javascript; charset=utf-8" }],
 ]);
 
-function readRecords() {
+async function initDatabase() {
+  if (!pool) {
+    return;
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS records (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      hours DOUBLE PRECISION NOT NULL,
+      subject TEXT NOT NULL,
+      type TEXT,
+      created_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+}
+
+function normalizeRecord(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    hours: Number(row.hours),
+    subject: row.subject,
+    type: row.type || undefined,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.createdAt || row.created_at,
+  };
+}
+
+async function readRecords() {
+  if (pool) {
+    const result = await pool.query("SELECT * FROM records ORDER BY created_at ASC");
+    return result.rows.map(normalizeRecord);
+  }
+
   try {
     const records = JSON.parse(fs.readFileSync(dataFile, "utf8"));
     return Array.isArray(records) ? records : [];
@@ -22,8 +62,76 @@ function readRecords() {
   }
 }
 
-function writeRecords(records) {
+async function writeRecords(records) {
+  if (pool) {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query("DELETE FROM records");
+
+      for (const record of records) {
+        await client.query(
+          "INSERT INTO records (id, name, hours, subject, type, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+          [record.id, record.name, record.hours, record.subject, record.type || null, record.createdAt]
+        );
+      }
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return;
+  }
+
   fs.writeFileSync(dataFile, JSON.stringify(records, null, 2));
+}
+
+async function addRecord(record) {
+  if (pool) {
+    await pool.query(
+      "INSERT INTO records (id, name, hours, subject, type, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+      [record.id, record.name, record.hours, record.subject, record.type || null, record.createdAt]
+    );
+    return readRecords();
+  }
+
+  const records = await readRecords();
+  records.push(record);
+  await writeRecords(records);
+  return records;
+}
+
+async function replaceMemberRecord(name, record) {
+  if (pool) {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query("DELETE FROM records WHERE name = $1", [name]);
+      await client.query(
+        "INSERT INTO records (id, name, hours, subject, type, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+        [record.id, record.name, record.hours, record.subject, record.type || null, record.createdAt]
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return readRecords();
+  }
+
+  const records = (await readRecords()).filter((savedRecord) => savedRecord.name !== name);
+  records.push(record);
+  await writeRecords(records);
+  return records;
 }
 
 function sendJson(response, status, data) {
@@ -78,7 +186,7 @@ function isAdmin(body) {
 
 async function handleApi(request, response, pathname) {
   if (request.method === "GET" && pathname === "/api/records") {
-    sendJson(response, 200, { records: readRecords() });
+    sendJson(response, 200, { records: await readRecords() });
     return;
   }
 
@@ -93,15 +201,13 @@ async function handleApi(request, response, pathname) {
       return;
     }
 
-    const records = readRecords();
-    records.push({
+    const records = await addRecord({
       id: crypto.randomUUID(),
       name,
       hours,
       subject,
       createdAt: new Date().toISOString(),
     });
-    writeRecords(records);
     sendJson(response, 201, { records });
     return;
   }
@@ -122,8 +228,7 @@ async function handleApi(request, response, pathname) {
       return;
     }
 
-    const records = readRecords().filter((record) => record.name !== name);
-    records.push({
+    const records = await replaceMemberRecord(name, {
       id: crypto.randomUUID(),
       name,
       hours,
@@ -131,7 +236,6 @@ async function handleApi(request, response, pathname) {
       type: "admin-edit",
       createdAt: new Date().toISOString(),
     });
-    writeRecords(records);
     sendJson(response, 200, { records });
     return;
   }
@@ -144,7 +248,7 @@ async function handleApi(request, response, pathname) {
       return;
     }
 
-    writeRecords([]);
+    await writeRecords([]);
     sendJson(response, 200, { records: [] });
     return;
   }
@@ -184,6 +288,14 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(port, () => {
-  console.log(`Study Rank is running on http://localhost:${port}`);
-});
+initDatabase()
+  .then(() => {
+    server.listen(port, () => {
+      const storage = pool ? "PostgreSQL" : "records.json";
+      console.log(`Study Rank is running on http://localhost:${port} with ${storage} storage`);
+    });
+  })
+  .catch((error) => {
+    console.error("Could not start Study Rank:", error);
+    process.exit(1);
+  });
